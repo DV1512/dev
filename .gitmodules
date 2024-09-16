@@ -1,0 +1,9 @@
+[submodule "frontend"]
+	path = frontend
+	url = git@github.com:DV1512/frontend.git
+[submodule "python_backend"]
+	path = python_backend
+	url = git@github.com:DV1512/python_backend.git
+[submodule "backend"]
+	path = backend
+	url = git@github.com:DV1512/backend.git
