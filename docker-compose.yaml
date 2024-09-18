@@ -1,23 +1,37 @@
-networks:
-  llm-db-network:
-    driver: bridge
-  db-network:
-    driver: bridge
-
 services:
+  init-llm-data:
+    image: busybox
+    command: chmod -R 777 /surrealdb
+    volumes:
+      - llm-data:/surrealdb
+
+  init-data:
+    image: busybox
+    command: chmod -R 777 /surrealdb
+    volumes:
+      - data:/surrealdb
+
   llm-db:
     image: surrealdb/surrealdb:latest
-    container_name: surrealdb
-    command: start --log info --user root --pass root file:/surrealdb/surreal.db
-    ports:
-      - "8234:8000"
+    container_name: llm-db
+    command: start --log info --user root --pass root file:/surrealdb/llm.db
     networks:
       - llm-db-network
     volumes:
       - llm-data:/surrealdb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      init-llm-data:
+        condition: service_completed_successfully
+
   db:
     image: surrealdb/surrealdb:latest
-    container_name: surrealdb
+    container_name: db
     command: start --log info --user root --pass root file:/surrealdb/surreal.db
     ports:
       - "7351:8000"
@@ -25,7 +39,22 @@ services:
       - db-network
     volumes:
       - data:/surrealdb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      init-data:
+        condition: service_completed_successfully
 
 volumes:
-  llm--data:
+  llm-data:
   data:
+
+networks:
+  llm-db-network:
+    driver: bridge
+  db-network:
+    driver: bridge
