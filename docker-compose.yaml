@@ -25,6 +25,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
     depends_on:
       init-llm-data:
         condition: service_completed_successfully
@@ -45,6 +46,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
     depends_on:
       init-data:
         condition: service_completed_successfully
@@ -58,6 +60,7 @@ services:
     container_name: backend
     networks:
       - db-network
+      - api
     environment:
       SURREALDB_URL: db:8000
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
@@ -74,8 +77,16 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
 
-  
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - api
 
 volumes:
   llm-data:
@@ -85,4 +96,6 @@ networks:
   llm-db-network:
     driver: bridge
   db-network:
+    driver: bridge
+  api:
     driver: bridge
