@@ -49,6 +49,34 @@ services:
       init-data:
         condition: service_completed_successfully
 
+  backend:
+    build:
+      context: ./backend
+      args:
+        PROFILE: dev
+        BINARY: backend
+    container_name: backend
+    networks:
+      - db-network
+    environment:
+      SURREALDB_URL: db:8000
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      PORT: 9999
+    ports:
+      - "9999:9999"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "--tries=1", "http://localhost:9999/" ] # wget is not in the container in the current commit but will be added in the future
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  
+
 volumes:
   llm-data:
   data:
